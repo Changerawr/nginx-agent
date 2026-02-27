@@ -1,0 +1,24 @@
+{
+  "name": "chr-nginx-agent",
+  "version": "1.0.0",
+  "description": "nginx sidecar for Changerawr custom domain SSL",
+  "main": "agent.ts",
+  "scripts": {
+    "start": "tsx agent.ts",
+    "dev": "tsx watch agent.ts"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "tsx": "^4.19.2"
+  },
+  "author": {
+    "name": "Supernova3339 <supernova@superdev.one>",
+    "url": "https://superdev.one"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.2"
+  }
+}
