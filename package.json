@@ -5,12 +5,16 @@
   "main": "agent.ts",
   "scripts": {
     "start": "tsx agent.ts",
-    "dev": "tsx watch agent.ts"
+    "dev": "tsx watch agent.ts",
+    "docker:build": "docker build -t chr-nginx-agent .",
+    "docker:run": "docker run -p 7842:7842 --env-file .env chr-nginx-agent",
+    "docker:dev": "docker build -t chr-nginx-agent . && docker run -p 7842:7842 --env-file .env chr-nginx-agent"
   },
   "dependencies": {
     "dotenv": "^17.3.1",
     "tsx": "^4.19.2"
   },
+  "license": "MIT",
   "author": {
     "name": "Supernova3339 <supernova@superdev.one>",
     "url": "https://superdev.one"
