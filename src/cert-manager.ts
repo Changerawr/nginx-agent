@@ -22,7 +22,17 @@ export async function fetchCertBundle(domain: string): Promise<CertBundle> {
                     return
                 }
                 try {
-                    resolve(JSON.parse(body) as CertBundle)
+                    const parsed = JSON.parse(body)
+                    log(`API response: ${JSON.stringify(parsed)}`)
+
+                    // Ensure the bundle has a domain field
+                    const bundle = parsed as CertBundle
+                    if (!bundle.domain) {
+                        log(`WARNING: API did not return domain field, using requested domain: ${domain}`)
+                        bundle.domain = domain
+                    }
+
+                    resolve(bundle)
                 } catch {
                     reject(new Error(`Invalid JSON: ${body}`))
                 }
