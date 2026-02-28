@@ -1,9 +1,11 @@
 import { existsSync, readFileSync } from 'fs'
-import { resolve } from 'path'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
 
 // Load config from chragent.conf if .env is not loaded
 function loadConfigFile() {
-    const configPath = process.env.CONFIG_PATH ?? '/etc/chragent.conf'
+    // Look in the project root (one level up from src/)
+    const configPath = resolve(__dirname, '..', 'chragent.conf')
 
     // Try chragent.conf if env vars seem missing
     if (!process.env.AGENT_SECRET && existsSync(configPath)) {
@@ -27,7 +29,7 @@ loadConfigFile()
 function requireEnv(key: string): string {
     const val = process.env[key]
     if (!val) {
-        console.error(`[agent] ${key} is required (check .env or /etc/chragent.conf)`)
+        console.error(`[agent] ${key} is required (check .env or chragent.conf)`)
         process.exit(1)
     }
     return val
@@ -52,6 +54,13 @@ export const config = {
     upstream:       getEnv('UPSTREAM', 'http://localhost:3000'),
     sandboxMode:    process.env.SANDBOX_MODE === 'true',
 } as const
+
+// Debug logging
+console.log('[config] Loaded configuration:')
+console.log(`  CERT_DIR: ${config.certDir} (type: ${typeof config.certDir})`)
+console.log(`  NGINX_DIR: ${config.nginxSitesDir} (type: ${typeof config.nginxSitesDir})`)
+console.log(`  UPSTREAM: ${config.upstream}`)
+console.log(`  SANDBOX_MODE: ${config.sandboxMode}`)
 
 export function log(msg: string) {
     const prefix = config.sandboxMode ? '[SANDBOX]' : '[agent]'

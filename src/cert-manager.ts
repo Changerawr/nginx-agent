@@ -39,7 +39,14 @@ export async function writeCerts(bundle: CertBundle): Promise<void> {
         return
     }
 
+    log(`writeCerts: certDir=${config.certDir} (type: ${typeof config.certDir}), domain=${bundle.domain}`)
+
+    if (!config.certDir) {
+        throw new Error(`CERT_DIR is not configured (value: ${config.certDir})`)
+    }
+
     const dir = path.join(config.certDir, bundle.domain)
+    log(`writeCerts: computed dir=${dir}`)
     await fs.mkdir(dir, { recursive: true })
 
     // Atomic writes — nginx never reads a partial file
