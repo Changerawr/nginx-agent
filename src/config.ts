@@ -2,6 +2,9 @@ import { existsSync, readFileSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
+// Track where config was loaded from
+let configSource = '.env file or environment variables'
+
 // Load config from chragent.conf if .env is not loaded
 function loadConfigFile() {
     // Look in the project root (one level up from src/)
@@ -10,6 +13,7 @@ function loadConfigFile() {
     // Try chragent.conf if env vars seem missing
     if (!process.env.AGENT_SECRET && existsSync(configPath)) {
         console.log(`[agent] Loading config from ${configPath}`)
+        configSource = configPath
         const content = readFileSync(configPath, 'utf-8')
         content.split('\n').forEach(line => {
             line = line.trim()
@@ -56,7 +60,7 @@ export const config = {
 } as const
 
 // Debug logging
-console.log('[config] Loaded configuration:')
+console.log(`[config] Loaded configuration from: ${configSource}`)
 console.log(`  CERT_DIR: ${config.certDir} (type: ${typeof config.certDir})`)
 console.log(`  NGINX_DIR: ${config.nginxSitesDir} (type: ${typeof config.nginxSitesDir})`)
 console.log(`  UPSTREAM: ${config.upstream}`)

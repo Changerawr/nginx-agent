@@ -5,11 +5,14 @@ import { log } from './config'
 
 export async function handleEvent(event: AgentEvent): Promise<void> {
     log(`${event.event} ${event.domain}`)
+    log(`Event received: ${JSON.stringify(event)}`)
 
     switch (event.event) {
         case 'cert.issued':
         case 'cert.renewed': {
+            log(`Fetching cert bundle for domain: ${event.domain}`)
             const bundle = await fetchCertBundle(event.domain)
+            log(`Received bundle: domain=${bundle.domain}, expiresAt=${bundle.expiresAt}`)
             await writeCerts(bundle)
             await writeNginxConfig(event.domain, 'active')
             await reloadNginx()
