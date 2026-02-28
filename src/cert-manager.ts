@@ -60,10 +60,16 @@ export async function writeCerts(bundle: CertBundle): Promise<void> {
         throw new Error(`Invalid cert bundle: privateKey=${!!bundle.privateKey}, fullChain=${!!bundle.fullChain}, certificate=${!!bundle.certificate}`)
     }
 
+    // Log cert data sizes and previews
+    log(`Certificate bundle sizes:`)
+    log(`  privateKey: ${bundle.privateKey.length} bytes`)
+    log(`  fullChain: ${bundle.fullChain.length} bytes`)
+    log(`  certificate: ${bundle.certificate.length} bytes`)
+
     // Check if the cert data looks like valid PEM
     if (!bundle.fullChain.includes('BEGIN CERTIFICATE')) {
         log(`ERROR: fullChain doesn't look like a valid PEM certificate`)
-        log(`fullChain preview: ${bundle.fullChain.substring(0, 200)}`)
+        log(`fullChain content: ${bundle.fullChain}`)
         throw new Error('Invalid fullChain format - missing BEGIN CERTIFICATE')
     }
 
@@ -71,6 +77,17 @@ export async function writeCerts(bundle: CertBundle): Promise<void> {
         log(`ERROR: privateKey doesn't look like a valid PEM key`)
         log(`privateKey preview: ${bundle.privateKey.substring(0, 200)}`)
         throw new Error('Invalid privateKey format - missing BEGIN marker')
+    }
+
+    // Warn if cert is suspiciously small
+    if (bundle.fullChain.length < 1000) {
+        log(`WARNING: fullChain is only ${bundle.fullChain.length} bytes - this seems too small`)
+        log(`fullChain content: ${bundle.fullChain}`)
+    }
+
+    if (bundle.privateKey.length < 200) {
+        log(`WARNING: privateKey is only ${bundle.privateKey.length} bytes - this seems too small`)
+        log(`privateKey content: ${bundle.privateKey}`)
     }
 
     const dir = path.join(config.certDir, bundle.domain)
