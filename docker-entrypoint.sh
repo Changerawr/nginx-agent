@@ -4,6 +4,12 @@ set -e
 echo "=== Changerawr Nginx Agent ==="
 echo "Initializing..."
 
+# Load config from /etc/chragent.conf if it exists and env vars aren't set
+if [ -f /etc/chragent.conf ] && [ -z "$AGENT_SECRET" ]; then
+    echo "Loading configuration from /etc/chragent.conf"
+    export $(grep -v '^#' /etc/chragent.conf | xargs)
+fi
+
 # Create required directories if they don't exist
 mkdir -p "${CERT_DIR:-/etc/ssl/changerawr}"
 mkdir -p "${NGINX_DIR:-/etc/nginx/sites-enabled}"

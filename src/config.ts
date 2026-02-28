@@ -1,8 +1,42 @@
+import { existsSync, readFileSync } from 'fs'
+import { resolve } from 'path'
+
+// Load config from chragent.conf if .env is not loaded
+function loadConfigFile() {
+    const configPath = process.env.CONFIG_PATH ?? '/etc/chragent.conf'
+
+    // Try chragent.conf if env vars seem missing
+    if (!process.env.AGENT_SECRET && existsSync(configPath)) {
+        console.log(`[agent] Loading config from ${configPath}`)
+        const content = readFileSync(configPath, 'utf-8')
+        content.split('\n').forEach(line => {
+            line = line.trim()
+            if (line && !line.startsWith('#')) {
+                const [key, ...valueParts] = line.split('=')
+                if (key && valueParts.length > 0) {
+                    const value = valueParts.join('=').replace(/^["']|["']$/g, '')
+                    process.env[key.trim()] = value.trim()
+                }
+            }
+        })
+    }
+}
+
+loadConfigFile()
+
 function requireEnv(key: string): string {
     const val = process.env[key]
     if (!val) {
-        console.error(`[agent] ${key} is required`)
+        console.error(`[agent] ${key} is required (check .env or /etc/chragent.conf)`)
         process.exit(1)
+    }
+    return val
+}
+
+function getEnv(key: string, defaultValue: string): string {
+    const val = process.env[key]
+    if (!val || val.trim() === '') {
+        return defaultValue
     }
     return val
 }
@@ -12,10 +46,10 @@ export const config = {
     agentSecret:    requireEnv('AGENT_SECRET'),
     changerawrUrl:  requireEnv('CHANGERAWR_URL'),
     internalSecret: requireEnv('INTERNAL_API_SECRET'),
-    certDir:        process.env.CERT_DIR        ?? '/etc/ssl/changerawr',
-    nginxSitesDir:  process.env.NGINX_DIR       ?? '/etc/nginx/sites-enabled',
-    nginxReloadCmd: process.env.NGINX_RELOAD_CMD ?? 'nginx -s reload',
-    upstream:       process.env.UPSTREAM        ?? 'http://localhost:3000',
+    certDir:        getEnv('CERT_DIR', '/etc/ssl/changerawr'),
+    nginxSitesDir:  getEnv('NGINX_DIR', '/etc/nginx/sites-enabled'),
+    nginxReloadCmd: getEnv('NGINX_RELOAD_CMD', 'nginx -s reload'),
+    upstream:       getEnv('UPSTREAM', 'http://localhost:3000'),
     sandboxMode:    process.env.SANDBOX_MODE === 'true',
 } as const
 

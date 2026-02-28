@@ -1,4 +1,7 @@
+// Load .env if available (for local development)
 import 'dotenv/config'
+
+// Config module will fallback to /etc/chragent.conf if needed (for Docker)
 import { config, log } from './src/config'
 import { createServer } from './src/server'
 

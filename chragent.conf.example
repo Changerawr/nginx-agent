@@ -1,0 +1,13 @@
+# Changerawr Nginx Agent Configuration
+# Copy this file to /etc/chragent.conf in your Docker container
+# or use environment variables instead
+
+AGENT_SECRET=your-secret-here
+CHANGERAWR_URL=http://localhost:3000
+INTERNAL_API_SECRET=your-internal-secret
+UPSTREAM=http://localhost:3000
+AGENT_PORT=7842
+CERT_DIR=/etc/ssl/changerawr
+NGINX_DIR=/etc/nginx/sites-enabled
+NGINX_RELOAD_CMD=nginx -s reload
+SANDBOX_MODE=false
