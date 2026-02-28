@@ -55,22 +55,78 @@ export async function writeCerts(bundle: CertBundle): Promise<void> {
         throw new Error(`CERT_DIR is not configured (value: ${config.certDir})`)
     }
 
+    // Validate cert data
+    if (!bundle.privateKey || !bundle.fullChain || !bundle.certificate) {
+        throw new Error(`Invalid cert bundle: privateKey=${!!bundle.privateKey}, fullChain=${!!bundle.fullChain}, certificate=${!!bundle.certificate}`)
+    }
+
+    // Check if the cert data looks like valid PEM
+    if (!bundle.fullChain.includes('BEGIN CERTIFICATE')) {
+        log(`ERROR: fullChain doesn't look like a valid PEM certificate`)
+        log(`fullChain preview: ${bundle.fullChain.substring(0, 200)}`)
+        throw new Error('Invalid fullChain format - missing BEGIN CERTIFICATE')
+    }
+
+    if (!bundle.privateKey.includes('BEGIN')) {
+        log(`ERROR: privateKey doesn't look like a valid PEM key`)
+        log(`privateKey preview: ${bundle.privateKey.substring(0, 200)}`)
+        throw new Error('Invalid privateKey format - missing BEGIN marker')
+    }
+
     const dir = path.join(config.certDir, bundle.domain)
     log(`writeCerts: computed dir=${dir}`)
-    await fs.mkdir(dir, { recursive: true })
+
+    try {
+        await fs.mkdir(dir, { recursive: true })
+        log(`Created directory: ${dir}`)
+    } catch (err) {
+        log(`ERROR creating directory: ${err}`)
+        throw err
+    }
 
     // Atomic writes — nginx never reads a partial file
-    await fs.writeFile(`${dir}/privkey.pem.tmp`,   bundle.privateKey,  { mode: 0o600 })
-    await fs.writeFile(`${dir}/fullchain.pem.tmp`, bundle.fullChain,   { mode: 0o644 })
-    await fs.writeFile(`${dir}/cert.pem.tmp`,      bundle.certificate, { mode: 0o644 })
-    await fs.writeFile(`${dir}/expires.txt.tmp`,   bundle.expiresAt,   { mode: 0o644 })
+    try {
+        log(`Writing temp files...`)
+        await fs.writeFile(`${dir}/privkey.pem.tmp`,   bundle.privateKey,  { mode: 0o600 })
+        log(`  wrote privkey.pem.tmp`)
+        await fs.writeFile(`${dir}/fullchain.pem.tmp`, bundle.fullChain,   { mode: 0o644 })
+        log(`  wrote fullchain.pem.tmp`)
+        await fs.writeFile(`${dir}/cert.pem.tmp`,      bundle.certificate, { mode: 0o644 })
+        log(`  wrote cert.pem.tmp`)
+        await fs.writeFile(`${dir}/expires.txt.tmp`,   bundle.expiresAt,   { mode: 0o644 })
+        log(`  wrote expires.txt.tmp`)
+    } catch (err) {
+        log(`ERROR writing temp files: ${err}`)
+        throw err
+    }
 
-    await fs.rename(`${dir}/privkey.pem.tmp`,   `${dir}/privkey.pem`)
-    await fs.rename(`${dir}/fullchain.pem.tmp`, `${dir}/fullchain.pem`)
-    await fs.rename(`${dir}/cert.pem.tmp`,      `${dir}/cert.pem`)
-    await fs.rename(`${dir}/expires.txt.tmp`,   `${dir}/expires.txt`)
+    try {
+        log(`Renaming temp files to final names...`)
+        await fs.rename(`${dir}/privkey.pem.tmp`,   `${dir}/privkey.pem`)
+        log(`  renamed privkey.pem`)
+        await fs.rename(`${dir}/fullchain.pem.tmp`, `${dir}/fullchain.pem`)
+        log(`  renamed fullchain.pem`)
+        await fs.rename(`${dir}/cert.pem.tmp`,      `${dir}/cert.pem`)
+        log(`  renamed cert.pem`)
+        await fs.rename(`${dir}/expires.txt.tmp`,   `${dir}/expires.txt`)
+        log(`  renamed expires.txt`)
+    } catch (err) {
+        log(`ERROR renaming files: ${err}`)
+        throw err
+    }
 
     log(`wrote certs for ${bundle.domain} (expires ${bundle.expiresAt})`)
+    log(`  fullchain size: ${bundle.fullChain.length} bytes`)
+    log(`  privkey size: ${bundle.privateKey.length} bytes`)
+
+    // Verify files were actually written
+    try {
+        const stat = await fs.stat(`${dir}/fullchain.pem`)
+        log(`  fullchain.pem exists: ${stat.size} bytes on disk`)
+    } catch (err) {
+        log(`ERROR: fullchain.pem was not written! ${err}`)
+        throw new Error('Certificate files were not written to disk')
+    }
 }
 
 export async function removeCerts(domain: string): Promise<void> {

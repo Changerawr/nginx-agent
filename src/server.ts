@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from 'crypto'
 import { config, log } from './config'
 import { AgentEvent, WebhookResponse, HealthResponse } from './types'
 import { handleEvent } from './event-handler'
+import { VERSION, BUILD_DATE } from './version'
 
 function verifySignature(body: string, signature: string | undefined): boolean {
     if (!signature) return false
@@ -36,6 +37,17 @@ export function createServer(): http.Server {
                 ok: true,
                 uptime: process.uptime(),
                 status: getAgentMode(),
+            }
+            send(res, 200, response)
+            return
+        }
+
+        if (req.method === 'GET' && req.url === '/version') {
+            const response = {
+                version: VERSION,
+                buildDate: BUILD_DATE,
+                status: getAgentMode(),
+                uptime: process.uptime(),
             }
             send(res, 200, response)
             return

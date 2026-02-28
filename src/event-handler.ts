@@ -13,9 +13,20 @@ export async function handleEvent(event: AgentEvent): Promise<void> {
             log(`Fetching cert bundle for domain: ${event.domain}`)
             const bundle = await fetchCertBundle(event.domain)
             log(`Received bundle: domain=${bundle.domain}, expiresAt=${bundle.expiresAt}`)
+
+            log(`Step 1: Writing certificates...`)
             await writeCerts(bundle)
+            log(`Step 1: Complete`)
+
+            log(`Step 2: Writing nginx config...`)
             await writeNginxConfig(event.domain, 'active')
+            log(`Step 2: Complete`)
+
+            log(`Step 3: Reloading nginx...`)
             await reloadNginx()
+            log(`Step 3: Complete`)
+
+            log(`All steps completed successfully for ${event.domain}`)
             break
         }
 
