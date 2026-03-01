@@ -23,7 +23,14 @@ export async function fetchCertBundle(domain: string): Promise<CertBundle> {
                 }
                 try {
                     const parsed = JSON.parse(body)
-                    log(`API response: ${JSON.stringify(parsed)}`)
+
+                    // Log field existence and sizes (not full content for security)
+                    log(`API response fields:`)
+                    log(`  domain: ${parsed.domain || 'MISSING'}`)
+                    log(`  expiresAt: ${parsed.expiresAt || 'MISSING'}`)
+                    log(`  privateKey: ${parsed.privateKey ? `${parsed.privateKey.length} bytes` : 'MISSING'}`)
+                    log(`  fullChain: ${parsed.fullChain ? `${parsed.fullChain.length} bytes` : 'MISSING'}`)
+                    log(`  certificate: ${parsed.certificate ? `${parsed.certificate.length} bytes` : 'MISSING'}`)
 
                     // Ensure the bundle has a domain field
                     const bundle = parsed as CertBundle
