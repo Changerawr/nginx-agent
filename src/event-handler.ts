@@ -1,10 +1,11 @@
 import { AgentEvent } from './types'
 import { fetchCertBundle, writeCerts, removeCerts } from './cert-manager'
-import { writeNginxConfig, removeNginxConfig, reloadNginx, nginxConfigExists } from './nginx-manager'
+import { writeNginxConfig, removeNginxConfig, reloadNginx, nginxConfigExists, writeIpWhitelistConfig } from './nginx-manager'
 import { log } from './config'
 
 export async function handleEvent(event: AgentEvent): Promise<void> {
-    log(`${event.event} ${event.domain}`)
+    const context = 'domain' in event ? event.domain : event.event
+    log(`${event.event} ${context}`)
     log(`Event received: ${JSON.stringify(event)}`)
 
     switch (event.event) {
@@ -42,6 +43,12 @@ export async function handleEvent(event: AgentEvent): Promise<void> {
         case 'cert.revoked': {
             await removeNginxConfig(event.domain)
             await removeCerts(event.domain)
+            await reloadNginx()
+            break
+        }
+
+        case 'ip_whitelist.updated': {
+            await writeIpWhitelistConfig(event.enabled, event.whitelist)
             await reloadNginx()
             break
         }

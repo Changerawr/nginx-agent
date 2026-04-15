@@ -11,3 +11,9 @@ CERT_DIR=/etc/ssl/changerawr
 NGINX_DIR=/etc/nginx/sites-enabled
 NGINX_RELOAD_CMD=nginx -s reload
 SANDBOX_MODE=false
+
+# Path where the IP whitelist nginx include file will be written.
+# Include this file inside a server {} or location {} block in your
+# main panel nginx config to enforce IP restrictions at the nginx layer.
+# Example:  include /etc/nginx/changerawr-ip-whitelist.conf;
+IP_WHITELIST_FILE=/etc/nginx/changerawr-ip-whitelist.conf

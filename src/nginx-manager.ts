@@ -41,6 +41,42 @@ export function nginxConfigExists(domain: string): boolean {
     return existsSync(configPath)
 }
 
+export async function writeIpWhitelistConfig(enabled: boolean, whitelist: string[]): Promise<void> {
+    if (config.sandboxMode) {
+        log(`[SANDBOX] would write IP whitelist config (enabled=${enabled}, ${whitelist.length} entries)`)
+        return
+    }
+
+    let content: string
+    if (!enabled) {
+        content = `# chr-nginx-agent: IP WHITELIST (DISABLED)
+# Generated: ${new Date().toISOString()}
+# IP whitelisting is currently disabled — all IPs are permitted.
+# This file is managed by Changerawr; do not edit manually.
+`
+    } else if (whitelist.length === 0) {
+        content = `# chr-nginx-agent: IP WHITELIST (ENABLED — NO ENTRIES)
+# Generated: ${new Date().toISOString()}
+# IP whitelisting is enabled but no IPs are configured — all traffic is denied.
+# This file is managed by Changerawr; do not edit manually.
+deny all;
+`
+    } else {
+        const allowLines = whitelist.map(ip => `allow ${ip};`).join('\n')
+        content = `# chr-nginx-agent: IP WHITELIST
+# Generated: ${new Date().toISOString()}
+# This file is managed by Changerawr; do not edit manually.
+# Include this file inside a server {} or location {} block, e.g.:
+#   include ${config.ipWhitelistFile};
+${allowLines}
+deny all;
+`
+    }
+
+    await fs.writeFile(config.ipWhitelistFile, content, { mode: 0o644 })
+    log(`wrote IP whitelist config (enabled=${enabled}, ${whitelist.length} entries) → ${config.ipWhitelistFile}`)
+}
+
 export async function reloadNginx(): Promise<void> {
     if (config.sandboxMode) {
         log(`[SANDBOX] would reload nginx`)

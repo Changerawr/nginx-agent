@@ -48,15 +48,16 @@ function getEnv(key: string, defaultValue: string): string {
 }
 
 export const config = {
-    port:           parseInt(process.env.AGENT_PORT ?? '7842'),
-    agentSecret:    requireEnv('AGENT_SECRET'),
-    changerawrUrl:  requireEnv('CHANGERAWR_URL'),
-    internalSecret: requireEnv('INTERNAL_API_SECRET'),
-    certDir:        getEnv('CERT_DIR', '/etc/ssl/changerawr'),
-    nginxSitesDir:  getEnv('NGINX_DIR', '/etc/nginx/sites-enabled'),
-    nginxReloadCmd: getEnv('NGINX_RELOAD_CMD', 'nginx -s reload'),
-    upstream:       getEnv('UPSTREAM', 'http://localhost:3000'),
-    sandboxMode:    process.env.SANDBOX_MODE === 'true',
+    port:               parseInt(process.env.AGENT_PORT ?? '7842'),
+    agentSecret:        requireEnv('AGENT_SECRET'),
+    changerawrUrl:      requireEnv('CHANGERAWR_URL'),
+    internalSecret:     requireEnv('INTERNAL_API_SECRET'),
+    certDir:            getEnv('CERT_DIR', '/etc/ssl/changerawr'),
+    nginxSitesDir:      getEnv('NGINX_DIR', '/etc/nginx/sites-enabled'),
+    nginxReloadCmd:     getEnv('NGINX_RELOAD_CMD', 'nginx -s reload'),
+    upstream:           getEnv('UPSTREAM', 'http://localhost:3000'),
+    sandboxMode:        process.env.SANDBOX_MODE === 'true',
+    ipWhitelistFile:    getEnv('IP_WHITELIST_FILE', '/etc/nginx/changerawr-ip-whitelist.conf'),
 } as const
 
 // Debug logging
@@ -65,6 +66,7 @@ console.log(`  CERT_DIR: ${config.certDir} (type: ${typeof config.certDir})`)
 console.log(`  NGINX_DIR: ${config.nginxSitesDir} (type: ${typeof config.nginxSitesDir})`)
 console.log(`  UPSTREAM: ${config.upstream}`)
 console.log(`  SANDBOX_MODE: ${config.sandboxMode}`)
+console.log(`  IP_WHITELIST_FILE: ${config.ipWhitelistFile}`)
 
 export function log(msg: string) {
     const prefix = config.sandboxMode ? '[SANDBOX]' : '[agent]'
